@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreightoScope — Lead Details Prototype</title>
+<style>
+  :root{
+    --font-family:-apple-system,"Segoe UI",Arial,Helvetica,sans-serif;
+    --page-bg:#F4F5F7;
+    --text-primary:#1F2020;
+    --text-muted:#707070;
+    --text-muted-alt:#5A5B5B;
+    --text-data:#0F1729;
+    --icon-light:#9AA0AB;
+    --border-light:#E8E8E8;
+    --border-panel:#E2E8F0;
+    --link-blue:#0B57D0;
+    --navy:#194381;
+    --navy-header-btn:#1C385F;
+    --edit-blue:#1B6EC2;
+    --sidebar-active:#00CAFC;
+    --red:#FF5555;
+    --close-bg:#FFE3E3;
+    --green:#5CB85C;
+    --amber:#FFA435;
+    --avatar-bg:#EDEFFF;
+    --avatar-text:#194381;
+    --active-green:#4FC628;
+    --pending-orange:#FF9D0A;
+    --cold-cyan:#00CAFC;
+    --stage-new:#3538CD;
+    --stage-contacted:#06AED4;
+    --stage-proposal:#FFA435;
+    --stage-negotiation:#3E6195;
+    --stage-lost:#EF5E25;
+    --stage-converted:#1ABE17;
+    --icon-call:#00918E;
+    --icon-email:#0092E4;
+    --icon-meeting:#676DFF;
+    --icon-task:#1ECBE2;
+    --icon-file:#5CB85C;
+    --icon-note:#FFA435;
+    --file-link:#0B57D0;
+    --file-type-badge-bg:rgba(111,66,193,.2);
+    --file-type-badge-border:#6F42C1;
+    --avatar-tag-bg:rgba(1,72,116,.1);
+    --avatar-tag-border:#014874;
+    --priority-badge-bg:#FFE8CB;
+    --priority-badge-border:#FFA435;
+    --new-badge-bg:#2F80ED;
+    --completed-badge-bg:#109A77;
+    --toast-error-bg:#FFDDDD;
+    --toast-error-border:#FF0000;
+    --toast-success-bg:#DFF7E4;
+    --toast-success-border:#1DA34D;
+    --toast-info-bg:#EAF1FB;
+    --toast-info-border:#6B93C7;
+    --toast-text:#28292A;
+    --shadow-input:0px 4px 4px rgba(219,219,219,.25);
+    --shadow-card:0px 4px 54px rgba(224,224,224,.25);
+    --shadow-menu:0px 4px 74px rgba(208,208,208,.25);
+    --toast-shadow:0px 16px 20px -8px rgba(3,5,18,.1);
+    --radius-standard:5px;
+    --radius-badge-soft:6px;
+    --radius-pill:16px;
+    --radius-pill-lg:20px;
+    --radius-toast:8px;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font-family);
+    color:var(--text-primary);
+    background:var(--page-bg);
+    font-size:14px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
+  a{color:inherit;text-decoration:none;}
+  svg{display:block;flex-shrink:0;}
+
+  /* ---------- Layout shell ---------- */
+  .app-shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:230px;flex-shrink:0;background:var(--navy);color:#fff;
+    display:flex;flex-direction:column;transition:margin-left .25s ease;
+    overflow-y:auto;
+  }
+  .app-shell.sidebar-collapsed .sidebar{margin-left:-230px;}
+  .main{flex:1;min-width:0;background:var(--page-bg);}
+
+  .sidebar-top{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.3px;font-size:15px;}
+  .brand-badge{width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--navy);}
+  .sidebar-close-btn{background:transparent;border:none;color:#BFD0EE;padding:4px;border-radius:6px;}
+  .sidebar-close-btn:hover{background:rgba(255,255,255,.1);}
+
+  .quick-search{margin:4px 16px 14px;display:flex;border:1px solid rgba(255,255,255,.25);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.06);}
+  .quick-search select{border:none;background:transparent;color:#fff;padding:8px 6px;font-size:12px;border-right:1px solid rgba(255,255,255,.2);}
+  .quick-search select option{color:#1F2020;}
+  .quick-search input{flex:1;min-width:0;border:none;background:transparent;color:#fff;padding:8px 8px;font-size:13px;outline:none;}
+  .quick-search input::placeholder{color:#BFD0EE;}
+  .quick-search button{border:none;background:transparent;color:#BFD0EE;padding:0 10px;}
+
+  .nav-list{list-style:none;margin:0;padding:4px 8px;flex:1;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;color:#DCE6F7;font-size:13.5px;cursor:pointer;}
+  .nav-item:hover{background:rgba(255,255,255,.07);}
+  .nav-item .nav-label{flex:1;}
+  .nav-item .chev{transition:transform .15s ease;color:#9DB3DA;}
+  .nav-item.group-open .chev{transform:rotate(90deg);}
+
+  .nav-subgroup{list-style:none;margin:0;padding:0 0 4px 30px;max-height:0;overflow:hidden;transition:max-height .2s ease;}
+  .nav-subgroup.open{max-height:320px;}
+  .nav-subitem{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;color:#CBD9F0;font-size:13px;}
+  .nav-subitem:hover{background:rgba(255,255,255,.06);}
+  .nav-subitem.active{background:var(--sidebar-active);color:#0B2545;font-weight:700;}
+
+  .sidebar-footer{display:flex;justify-content:space-around;padding:14px 10px;border-top:1px solid rgba(255,255,255,.12);color:#BFD0EE;}
+
+  /* ---------- Page header ---------- */
+  .page-header{display:flex;align-items:center;gap:14px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--border-light);}
+  .icon-btn{background:#fff;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:8px;color:var(--text-primary);display:flex;}
+  .icon-btn:hover{background:#F4F5F7;}
+  .icon-btn.round{border-radius:50%;}
+  .page-title{font-size:20px;font-weight:700;flex:1;color:var(--text-primary);}
+  .header-actions{display:flex;gap:10px;}
+
+  .btn{border-radius:var(--radius-standard);padding:9px 16px;font-weight:600;font-size:13.5px;border:1px solid transparent;display:inline-flex;align-items:center;gap:7px;transition:background .12s ease;white-space:nowrap;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-danger:hover{background:#E24545;}
+  .btn-navy{background:var(--navy-header-btn);color:#fff;}
+  .btn-navy:hover{background:#142B49;}
+  .btn-outline{background:#fff;color:var(--text-primary);border-color:var(--border-light);}
+  .btn-outline:hover{background:#F4F5F7;}
+  .btn-edit{background:var(--edit-blue);color:#fff;border-radius:4px;padding:6px 10px;font-size:14px;font-weight:500;}
+  .btn-edit:hover{background:#15599C;}
+  .btn-cancel{background:#F0F1F3;color:var(--text-primary);}
+  .btn-cancel:hover{background:#E4E6EA;}
+  .btn-disabled{opacity:.5;cursor:not-allowed;}
+  .btn-cancel-small,.btn-primary-small{padding:6px 12px;font-size:12.5px;border-radius:6px;border:1px solid var(--border-light);}
+  .btn-primary-small{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .btn-primary-small:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* ---------- Tabs row ---------- */
+  .container{padding:20px 24px 60px;max-width:1400px;margin:0 auto;}
+  .tabs-row{display:flex;gap:28px;border-bottom:1px solid var(--border-light);margin-bottom:18px;}
+  .tab{padding:10px 2px 12px;font-weight:400;color:var(--text-muted-alt);font-size:14.5px;border-bottom:2.5px solid transparent;}
+  .tab.active{color:var(--navy);border-color:var(--navy);font-weight:600;}
+
+  /* ---------- Header card ---------- */
+  .header-card{background:#fff;border:1px solid var(--border-panel);border-radius:var(--radius-standard);padding:20px 22px;display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+  .avatar-square{width:80px;height:80px;border-radius:var(--radius-standard);background:var(--avatar-bg);color:var(--avatar-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;flex-shrink:0;}
+  .header-card-main{flex:1;min-width:220px;}
+  .header-card-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .header-card-title-row h2{font-size:18px;font-weight:700;margin:0;color:var(--text-primary);}
+  .pill{padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+  .pill-green{background:var(--active-green);color:#fff;border-radius:var(--radius-badge-soft);font-weight:500;}
+  .pill-orange{background:#FFF1DE;color:#B4650B;}
+  .star-btn{background:none;border:1px solid var(--border-light);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--icon-light);}
+  .meta-line{display:flex;align-items:center;gap:7px;color:var(--text-muted);font-size:14px;font-weight:400;margin-top:6px;}
+  .header-card-side{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .activity-summary{background:#EDEFFF;color:var(--text-primary);font-size:13px;font-weight:400;padding:5px 13px;border-radius:2px;}
+
+  /* ---------- Content grid ---------- */
+  .content-grid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start;}
+  @media (max-width:980px){.content-grid{grid-template-columns:1fr;}}
+  .panel-box{background:#fff;border:1px solid var(--border-panel);border-radius:var(--radius-standard);padding:20px;}
+  .panel-box h3{margin:0 0 12px;font-size:16px;font-weight:600;line-height:19px;color:var(--text-primary);}
+
+  .left-panel-outer{background:#fff;border:1px solid var(--border-panel);border-radius:var(--radius-standard);box-shadow:var(--shadow-input);overflow:hidden;}
+  .left-panel-inner{padding:20px;box-shadow:var(--shadow-card);border-radius:5px 5px 0 0;}
+  .left-panel-inner h3{margin:0 0 12px;font-size:16px;font-weight:600;line-height:19px;color:var(--text-primary);}
+  .left-panel-footer{padding:14px 20px;box-shadow:var(--shadow-menu);border-radius:0 0 5px 5px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .footer-item{font-size:13px;color:var(--text-muted);}
+  .footer-item .footer-value{color:var(--text-primary);font-weight:600;margin-left:4px;}
+
+  .info-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px;}
+  .info-row .k{color:var(--text-muted);font-weight:400;}
+  .info-row .v{color:var(--text-primary);font-weight:400;text-align:right;}
+  .badge-outline-blue{border:1px solid var(--cold-cyan);color:var(--text-primary);border-radius:var(--radius-pill-lg);padding:3px 10px;font-size:13px;display:inline-flex;align-items:center;gap:5px;}
+  .badge-outline-blue .cold-icon{color:var(--cold-cyan);display:flex;}
+  .badge-orange{background:var(--pending-orange);color:#fff;border-radius:var(--radius-badge-soft);padding:2px 12px;font-size:12px;font-weight:700;}
+  .divider{border:none;border-top:1px solid var(--border-light);margin:14px 0;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .chip{background:#fff;border:1px solid var(--border-panel);border-radius:var(--radius-badge-soft);padding:4.8px 5.8px;font-size:12px;font-weight:500;color:var(--text-muted);}
+
+  .right-col > *{margin-bottom:18px;}
+  .stage-row{display:flex;margin-top:4px;overflow-x:auto;padding-bottom:4px;}
+  .stage{
+    padding:11px 26px 11px 32px;margin-right:-14px;font-size:13px;font-weight:700;
+    clip-path:polygon(0 0,85% 0,100% 50%,85% 100%,0 100%,15% 50%);
+    white-space:nowrap;background:#fff;border:1.6px solid var(--border-light);color:var(--text-muted);
+  }
+  .stage:first-child{padding-left:20px;}
+  .stage.filled{background:var(--stage-new);border-color:var(--stage-new);color:#fff;}
+  .stage.blue{border-color:var(--stage-contacted);color:var(--stage-contacted);}
+  .stage.orange{border-color:var(--stage-proposal);color:var(--stage-proposal);}
+  .stage.navy{border-color:var(--stage-negotiation);color:var(--stage-negotiation);}
+  .stage.red{border-color:var(--stage-lost);color:var(--stage-lost);}
+  .stage.green{border-color:var(--stage-converted);color:var(--stage-converted);}
+
+  /* ---------- Activity tabs ---------- */
+  .activity-tabs{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border:1px solid var(--border-panel);border-radius:12px 12px 0 0;padding:6px;border-bottom:none;}
+  .activity-tab{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:8px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted-alt);font-weight:400;font-size:13.5px;}
+  .activity-tab:hover{background:#F4F5F7;}
+  .activity-tab.active{background:transparent;color:var(--navy);font-weight:600;border-bottom:2px solid var(--navy);}
+  .panel-wrapper{background:#fff;border:1px solid var(--border-panel);border-top:none;border-radius:0 0 12px 12px;padding:20px;min-height:320px;}
+  .placeholder-text{color:var(--text-muted);font-size:13.5px;padding:40px 0;text-align:center;}
+
+  /* Activities static panel */
+  .act-heading-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+  .act-heading-row h3{margin:0;flex:1;font-size:16px;font-weight:600;color:var(--text-primary);}
+  .static-range{border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:8px 14px;font-size:13px;color:var(--text-muted);}
+  .section-label{font-size:13px;font-weight:700;color:var(--text-muted);margin:10px 0;text-transform:none;}
+  .act-card{display:flex;align-items:center;gap:12px;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:12px 14px;margin-bottom:10px;}
+  .act-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+  .act-body{flex:1;min-width:0;}
+  .act-title-row{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;}
+  .badge-new{background:var(--new-badge-bg);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;}
+  .act-sub-row{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12.5px;color:var(--text-muted);}
+  .priority-badge{background:var(--priority-badge-bg);color:#8A6A1E;border:.5px solid var(--priority-badge-border);border-radius:10px;padding:2px 9px;font-size:11px;font-weight:700;}
+  .act-right{display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:12.5px;}
+
+  /* ---------- Feed header ---------- */
+  .feed-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .feed-title{margin:0;font-size:16px;font-weight:600;color:var(--text-primary);}
+  .feed-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  .date-filter{position:relative;}
+  .date-filter-btn{display:flex;align-items:center;gap:8px;border:1px solid var(--border-light);background:#fff;border-radius:var(--radius-standard);box-shadow:var(--shadow-input);padding:0 14px;height:40px;min-width:214px;font-size:13px;color:var(--text-primary);}
+  .date-filter-dropdown{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--border-light);border-radius:var(--radius-standard);box-shadow:var(--shadow-menu);min-width:240px;padding:8px;z-index:40;}
+  .date-preset-item{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:6px;background:transparent;border:none;font-size:13px;color:var(--text-primary);}
+  .date-preset-item:hover{background:#F4F5F7;}
+  .date-preset-item.active{background:#EEF3FF;color:var(--navy);font-weight:700;}
+  .custom-range-actions{display:flex;justify-content:flex-end;gap:8px;padding:8px 6px 4px;}
+
+  /* ---------- Calendar (Custom Range) ---------- */
+  .cal-widget{padding:2px 2px 0;}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 8px;}
+  .cal-nav-btn{background:transparent;border:1px solid var(--border-light);border-radius:6px;padding:4px;color:var(--text-primary);display:flex;}
+  .cal-nav-btn:hover{background:#F4F5F7;}
+  .cal-month-label{font-size:13px;font-weight:700;color:var(--text-primary);}
+  .cal-range-label{text-align:center;font-size:12px;color:var(--text-muted);padding:0 4px 8px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 4px;}
+  .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--text-muted-alt);padding:4px 0;}
+  .cal-day{border:none;background:transparent;border-radius:6px;padding:6px 0;font-size:12.5px;color:var(--text-primary);}
+  .cal-day:hover{background:#F4F5F7;}
+  .cal-day-empty{pointer-events:none;}
+  .cal-day.selected,.cal-day.range-start,.cal-day.range-end{background:var(--navy);color:#fff;font-weight:700;}
+  .cal-day.in-range{background:#E5ECF7;color:var(--text-primary);}
+  .cal-day.in-range.range-start,.cal-day.in-range.range-end{background:var(--navy);color:#fff;}
+
+  /* ---------- Cards ---------- */
+  .card-list{display:flex;flex-direction:column;gap:10px;}
+  .record-card{display:flex;gap:10px;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:12px;background:#fff;}
+  .card-icon-square{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+  .card-icon-square.green{background:var(--icon-file);}
+  .card-icon-square.amber{background:var(--icon-note);}
+  .card-content{flex:1;min-width:0;}
+  .card-top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .card-top-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1;}
+  .card-name-link{color:var(--file-link);font-weight:500;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;font-size:14px;}
+  .card-name-link.static{color:var(--text-primary);text-decoration:none;cursor:pointer;font-weight:700;}
+  .card-top-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .card-date{color:var(--text-muted);font-size:13px;white-space:nowrap;}
+  .dots-btn{background:none;border:none;color:var(--icon-light);padding:4px;border-radius:6px;}
+  .dots-btn:hover{background:#F4F5F7;}
+  .card-second-row{display:flex;align-items:center;gap:9px;margin-top:8px;}
+  .avatar-circle{width:24px;height:24px;border-radius:50%;background:var(--avatar-bg);color:var(--avatar-text);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .avatar-tag{min-width:26px;height:20px;padding:0 6px;border-radius:var(--radius-badge-soft);background:var(--avatar-tag-bg);border:1px solid var(--avatar-tag-border);color:var(--avatar-tag-border);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .uploader-name{font-size:13px;color:var(--text-muted);white-space:nowrap;font-weight:400;}
+  .type-badge{background:var(--file-type-badge-bg);border:.5px solid var(--file-type-badge-border);color:var(--text-primary);border-radius:var(--radius-pill);padding:4px 6px;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;flex-shrink:0;}
+
+  .action-menu-wrapper{position:relative;}
+  .action-menu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--border-light);box-shadow:var(--shadow-menu);border-radius:var(--radius-standard);min-width:170px;padding:10px;display:flex;flex-direction:column;gap:5px;z-index:50;}
+  .action-menu-item{display:flex;align-items:center;gap:8px;width:100%;min-height:36px;padding:9px 12px;background:none;border:none;border-radius:6px;font-size:13px;font-weight:400;color:var(--text-data);text-align:left;}
+  .action-menu-item svg{color:#464F60;}
+  .action-menu-item:hover{background:#F4F5F7;}
+  .action-menu-item.danger{color:var(--red);}
+  .action-menu-item.danger svg{color:var(--red);}
+
+  .empty-state{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-muted);padding:50px 0;font-size:13.5px;}
+
+  /* ---------- Drawer ---------- */
+  .drawer-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.42);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:90;}
+  .drawer-backdrop.open{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:600px;max-width:92vw;background:#fff;box-shadow:-8px 0 30px rgba(15,23,42,.18);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease;z-index:95;}
+  .drawer.open{transform:translateX(0);}
+  .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border-light);}
+  .drawer-header h3{margin:0;font-size:19px;font-weight:800;}
+  .close-circle-btn{width:34px;height:34px;border-radius:50%;background:var(--close-bg);color:var(--red);border:none;display:flex;align-items:center;justify-content:center;}
+  .drawer-body{flex:1;overflow-y:auto;padding:22px 24px;}
+  .drawer-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border-light);}
+
+  .field{margin-bottom:18px;}
+  .field-row{display:flex;gap:16px;}
+  .field-row.two-col > .field{flex:1;min-width:0;}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px;}
+  .field .required{color:var(--red);}
+  .field input[type="text"],.field select,.field textarea{width:100%;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:10px 12px;font-size:13.5px;color:var(--text-primary);background:#fff;box-shadow:var(--shadow-input);}
+  .field textarea{resize:vertical;min-height:120px;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #B9CDFB;outline-offset:1px;border-color:var(--link-blue);}
+  .locked-field{background:#F4F5F7;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:10px 12px;color:var(--text-primary);}
+  .readonly-field{background:#F9FAFB;border:1px solid var(--border-light);border-radius:var(--radius-standard);padding:12px 14px;color:var(--text-primary);}
+  .readonly-field.multiline{white-space:pre-wrap;min-height:120px;}
+  .error-field{border-color:var(--red) !important;}
+  .inline-error{color:var(--red);font-size:12px;margin-top:6px;}
+
+  .dropzone{border:1.6px dashed #C7D0DE;border-radius:var(--radius-standard);padding:30px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--text-primary);background:#FBFCFD;}
+  .dropzone.drag-over{background:#EEF3FF;border-color:var(--link-blue);}
+  .dropzone.disabled{opacity:.55;pointer-events:none;}
+  .dropzone-icon{color:var(--icon-file);}
+  .browse-btn{display:inline-flex;align-items:center;gap:7px;background:#E9F0FF;color:var(--link-blue);border:none;border-radius:var(--radius-standard);padding:9px 16px;font-weight:700;font-size:13px;}
+  .count-line{margin-top:10px;font-weight:800;color:var(--text-primary);font-size:13.5px;}
+
+  .file-table{display:grid;grid-template-columns:2.4fr 1fr 1fr 30px;gap:10px 12px;align-items:start;margin-top:16px;}
+  .file-table-hcell{font-size:13px;font-weight:700;padding-bottom:2px;}
+  .file-name-cell{padding:10px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px;}
+  .remove-row-btn{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;border:none;display:flex;align-items:center;justify-content:center;margin-top:6px;}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:120;}
+  .modal{background:#fff;border-radius:var(--radius-standard);width:380px;max-width:90vw;box-shadow:var(--shadow-card);}
+  .modal-header{font-size:17px;font-weight:800;padding:20px 22px 6px;color:var(--text-primary);}
+  .modal-body{padding:6px 22px 18px;color:var(--text-muted);font-size:13.5px;}
+  .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 20px;}
+
+  /* ---------- Toasts ---------- */
+  .toast-container{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column-reverse;gap:10px;z-index:200;align-items:center;}
+  .toast{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--radius-toast);font-size:15px;font-weight:500;color:var(--toast-text);box-shadow:var(--toast-shadow);opacity:1;transition:opacity .3s ease, transform .3s ease;min-width:260px;max-width:420px;}
+  .toast.toast-hide{opacity:0;transform:translateY(6px);}
+  .toast-success{background:var(--toast-success-bg);border:1px solid var(--toast-success-border);}
+  .toast-error{background:var(--toast-error-bg);border:1px solid var(--toast-error-border);}
+  .toast-info{background:var(--toast-info-bg);border:1px solid var(--toast-info-border);}
+  .toast-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+  .toast-success .toast-icon{background:var(--toast-success-border);}
+  .toast-error .toast-icon{background:var(--toast-error-border);}
+  .toast-info .toast-icon{background:var(--toast-info-border);}
+
+  /* ---------- Prototype controls ---------- */
+  .proto-panel{position:fixed;left:16px;bottom:16px;width:280px;background:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(15,23,42,.2);z-index:150;overflow:hidden;}
+  .proto-header{display:flex;align-items:center;justify-content:space-between;background:var(--navy-header-btn);color:#fff;padding:11px 14px;font-weight:700;font-size:13px;}
+  .proto-header span{display:flex;align-items:center;gap:8px;}
+  .proto-body{padding:14px;max-height:340px;overflow-y:auto;}
+  .proto-body.collapsed{display:none;}
+  .proto-check{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:10px;}
+  .proto-btn{width:100%;text-align:left;border:1px solid var(--border-light);background:#F8F9FB;border-radius:8px;padding:9px 10px;font-size:12.5px;margin-bottom:8px;}
+  .proto-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .proto-note{font-size:11px;color:var(--text-muted);margin:6px 0 0;}
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <span class="brand-badge">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </span>
+        FREIGHTOSCOPE
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="quick-search">
+      <select><option>SHPT #</option><option>Lead #</option><option>Party</option></select>
+      <input type="text" placeholder="Quick search">
+      <button><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="nav-label">Dashboard</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="nav-label">Admin</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg><span class="nav-label">Masters</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg><span class="nav-label">Member - Member Data Share</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+
+      <li class="nav-item group-open" onclick="toggleSalesGroup(event)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        <span class="nav-label">Sales</span>
+        <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </li>
+      <ul class="nav-subgroup open" id="sales-subgroup">
+        <li class="nav-subitem active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Leads</li>
+        <li class="nav-subitem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>Opportunities</li>
+        <li class="nav-subitem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>Activities</li>
+        <li class="nav-subitem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>Contacts</li>
+        <li class="nav-subitem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Calendar</li>
+        <li class="nav-subitem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Settings</li>
+      </ul>
+
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg><span class="nav-label">Pricing</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg><span class="nav-label">Operations</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+      <li class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span class="nav-label">Report</span><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="page-header">
+      <button class="icon-btn" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <button class="icon-btn round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div class="page-title">Leads</div>
+      <div class="header-actions">
+        <button class="btn btn-danger">Deactivate</button>
+        <button class="btn btn-navy">Convert To Party</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="tabs-row">
+        <div class="tab active">Lead Details</div>
+        <div class="tab">Opportunities (4)</div>
+        <div class="tab">Contacts (3)</div>
+      </div>
+
+      <div class="header-card">
+        <div class="avatar-square">RG</div>
+        <div class="header-card-main">
+          <div class="header-card-title-row">
+            <h2>RGB Exports</h2>
+            <span class="pill pill-green">Active</span>
+            <button class="star-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+          </div>
+          <div class="meta-line">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="1"></rect><path d="M9 21V11h6v10"></path><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path></svg>
+            New South Wales, Australia
+          </div>
+          <div class="meta-line">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            22, Ave Street, Sydney, New South Wales, 2000
+          </div>
+        </div>
+        <div class="header-card-side">
+          <div class="activity-summary">Next Activity: Call at 5:00 PM &nbsp;|&nbsp; Last Activity: 2 hours ago</div>
+          <button class="btn btn-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit</button>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <!-- LEFT PANEL -->
+        <div>
+          <div class="left-panel-outer">
+            <div class="left-panel-inner">
+              <h3>Information</h3>
+              <div class="info-row"><span class="k">Lead ID</span><span class="v">RGBEXP</span></div>
+              <div class="info-row"><span class="k">Party Role</span><span class="v">Lead</span></div>
+              <div class="info-row"><span class="k">Industry</span><span class="v">Textile &amp; Garments</span></div>
+              <div class="info-row"><span class="k">Target Party Role</span><span class="v">Customer</span></div>
+              <div class="info-row"><span class="k">Lead Temperature</span><span class="v"><span class="badge-outline-blue"><span class="cold-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="19.07" y2="4.93"></line></svg></span> Cold</span></span></div>
+              <div class="info-row"><span class="k">Source</span><span class="v">Conference</span></div>
+              <div class="info-row"><span class="k">Converted Status</span><span class="v"><span class="badge-orange">Pending</span></span></div>
+              <hr class="divider">
+              <h3>Primary Contact Details</h3>
+              <div class="info-row"><span class="k">Contact Name</span><span class="v">John Abraham</span></div>
+              <div class="info-row"><span class="k">Contact No.</span><span class="v">+61 412 345 678</span></div>
+              <div class="info-row"><span class="k">Email</span><span class="v">rgbx@gmail.com</span></div>
+              <div class="info-row"><span class="k">Designation</span><span class="v">Sales Director</span></div>
+              <hr class="divider">
+              <h3>Service Interest</h3>
+              <div class="chip-row">
+                <span class="chip">Air Freight</span>
+                <span class="chip">Ocean Freight</span>
+                <span class="chip">Customs Brokerage</span>
+                <span class="chip">Warehousing</span>
+                <span class="chip">Trucking</span>
+              </div>
+              <hr class="divider">
+              <h3>Networks</h3>
+              <div class="chip-row">
+                <span class="chip">AON</span>
+                <span class="chip">BLOC</span>
+                <span class="chip">CooP</span>
+              </div>
+              <hr class="divider">
+              <h3>Additional Information</h3>
+              <div class="info-row"><span class="k">Short Name</span><span class="v">RGBX</span></div>
+              <div class="info-row"><span class="k">Legal Name</span><span class="v">RGB Exports Pty Ltd</span></div>
+              <div class="info-row"><span class="k">Company Email</span><span class="v">info@rgbexports.com.au</span></div>
+              <div class="info-row"><span class="k">Company Contact No.</span><span class="v">+61 2 9000 1234</span></div>
+              <div class="info-row"><span class="k">Company Website</span><span class="v">www.rgbexports.com.au</span></div>
+              <div class="info-row"><span class="k">Created By</span><span class="v">Hrucha Malusare</span></div>
+              <div class="info-row"><span class="k">Date Created</span><span class="v">15 Jan 2026</span></div>
+            </div>
+            <div class="left-panel-footer">
+              <div class="footer-item">Last Modified<span class="footer-value">2 hours ago</span></div>
+              <div class="footer-item">Modified By<span class="footer-value">Sudhi SP</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-col">
+          <div class="panel-box">
+            <h3>Lead Stages</h3>
+            <div class="stage-row">
+              <div class="stage filled">New</div>
+              <div class="stage blue">Contacted</div>
+              <div class="stage orange">Proposal Sent</div>
+              <div class="stage navy">Negotiation</div>
+              <div class="stage red">Lost</div>
+              <div class="stage green">Converted</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="activity-tabs">
+              <button class="activity-tab active" data-tab="activities" onclick="switchActivityTab('activities')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>Activities</button>
+              <button class="activity-tab" data-tab="calls" onclick="switchActivityTab('calls')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>Calls</button>
+              <button class="activity-tab" data-tab="emails" onclick="switchActivityTab('emails')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>Emails</button>
+              <button class="activity-tab" data-tab="meetings" onclick="switchActivityTab('meetings')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Meetings</button>
+              <button class="activity-tab" data-tab="tasks" onclick="switchActivityTab('tasks')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Tasks</button>
+              <button class="activity-tab" data-tab="files" onclick="switchActivityTab('files')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Files</button>
+              <button class="activity-tab" data-tab="notes" onclick="switchActivityTab('notes')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Notes</button>
+            </div>
+
+            <div class="panel-wrapper">
+              <div class="panel-content" id="panel-activities">
+                <div class="act-heading-row">
+                  <h3>All Activities</h3>
+                  <button class="btn btn-navy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Add New</button>
+                  <span class="static-range">8/01/2026 - 8/31/2026</span>
+                </div>
+                <div class="section-label">Upcoming</div>
+
+                <div class="act-card">
+                  <div class="act-icon" style="background:#00918E"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                  <div class="act-body">
+                    <div class="act-title-row">Call with John Abraham <span class="badge-new">New</span></div>
+                    <div class="act-sub-row"><span class="avatar-circle">HM</span> Hrucha Malusare <span class="priority-badge">High</span></div>
+                  </div>
+                  <div class="act-right">Today, 5:00 PM ⋮</div>
+                </div>
+                <div class="act-card">
+                  <div class="act-icon" style="background:#00918E"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                  <div class="act-body">
+                    <div class="act-title-row">Follow-up call <span class="badge-new">New</span></div>
+                    <div class="act-sub-row"><span class="avatar-circle">HM</span> Hrucha Malusare <span class="priority-badge">High</span></div>
+                  </div>
+                  <div class="act-right">Tomorrow, 11:00 AM ⋮</div>
+                </div>
+                <div class="act-card">
+                  <div class="act-icon" style="background:#1ECBE2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+                  <div class="act-body">
+                    <div class="act-title-row">Send proposal document <span class="badge-new">New</span></div>
+                    <div class="act-sub-row"><span class="avatar-circle">HM</span> Hrucha Malusare <span class="priority-badge">Medium</span></div>
+                  </div>
+                  <div class="act-right">Fri, 2:00 PM ⋮</div>
+                </div>
+                <div class="act-card">
+                  <div class="act-icon" style="background:#0092E4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+                  <div class="act-body">
+                    <div class="act-title-row">Pricing sheet email <span class="badge-new">New</span></div>
+                    <div class="act-sub-row"><span class="avatar-circle">HM</span> Hrucha Malusare <span class="priority-badge">Low</span></div>
+                  </div>
+                  <div class="act-right">Mon, 9:00 AM ⋮</div>
+                </div>
+              </div>
+
+              <div class="panel-content" id="panel-calls" hidden><p class="placeholder-text">Calls activity list will appear here.</p></div>
+              <div class="panel-content" id="panel-emails" hidden><p class="placeholder-text">Email activity list will appear here.</p></div>
+              <div class="panel-content" id="panel-meetings" hidden><p class="placeholder-text">Meeting activity list will appear here.</p></div>
+              <div class="panel-content" id="panel-tasks" hidden><p class="placeholder-text">Task activity list will appear here.</p></div>
+              <div class="panel-content" id="panel-files" hidden></div>
+              <div class="panel-content" id="panel-notes" hidden></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DRAWER ============ -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="attemptCloseDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawer-title"></h3>
+    <button class="close-circle-btn" onclick="attemptCloseDrawer()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer" id="drawer-footer"></div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div id="modal-root"></div>
+
+<!-- ============ TOASTS ============ -->
+<div class="toast-container" id="toast-root"></div>
+
+<!-- ============ PROTOTYPE CONTROLS ============ -->
+<div class="proto-panel">
+  <div class="proto-header" onclick="toggleProtoPanel()">
+    <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Prototype Controls</span>
+    <span id="proto-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></span>
+  </div>
+  <div class="proto-body" id="proto-body">
+    <label class="proto-check"><input type="checkbox" checked onchange="state.permissions.add=this.checked; rerenderActivePanel();"> Add permission</label>
+    <label class="proto-check"><input type="checkbox" checked onchange="state.permissions.update=this.checked; rerenderActivePanel();"> Update permission</label>
+    <label class="proto-check"><input type="checkbox" checked onchange="state.permissions.delete=this.checked; rerenderActivePanel();"> Delete permission</label>
+    <label class="proto-check"><input type="checkbox" onchange="state.simulateFailure=this.checked;"> Simulate next Save/Delete failure</label>
+    <button class="proto-btn" id="btn-add5" onclick="protoAddTestFiles(5)" disabled>+ Add 5 test files to session</button>
+    <button class="proto-btn" id="btn-add30" onclick="protoAddTestFiles(30)" disabled>+ Attempt 30 test files (tests 25-cap)</button>
+    <p class="proto-note">These controls are for prototype testing only and do not appear in the real product.</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+var FILE_TYPE_OPTIONS = ['Invoice','Bill of Lading','Customs Declaration','Certificate of Origin','Packing List','Other'];
+var CURRENT_USER = 'Rashed Saad';
+var PERM_DENIED_MSG = 'You do not have permission to perform this action. Please contact your Admin or service@freightoscope.com for assistance.';
+
+/* =========================================================
+   STATE
+   ========================================================= */
+var state = {
+  activeSubTab: 'activities',
+  permissions: { add:true, update:true, delete:true },
+  simulateFailure: false,
+  seq: 0,
+  files: [],
+  notes: [],
+  filters: { files:null, notes:null },
+  calendar: {},
+  openDateFilter: null,
+  openMenuId: null,
+  drawer: null,
+  modal: null
+};
+var idCounter = 1;
+function nextId(prefix){ idCounter += 1; return prefix + '-' + idCounter; }
+
+/* =========================================================
+   ICONS (used for dynamically rendered content)
+   ========================================================= */
+var ICON_PATHS = {
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>',
+  'edit-2':'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>',
+  'trash-2':'<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>',
+  'more-vertical':'<circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline>',
+  'file-text':'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>',
+  'chevron-down':'<polyline points="6 9 12 15 18 9"></polyline>',
+  'chevron-left':'<polyline points="15 18 9 12 15 6"></polyline>',
+  'chevron-right':'<polyline points="9 18 15 12 9 6"></polyline>',
+  'plus-circle':'<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>',
+  'upload-cloud':'<path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line>',
+  minus:'<line x1="5" y1="12" x2="19" y2="12"></line>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
+  check:'<polyline points="20 6 9 17 4 12"></polyline>',
+  info:'<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>',
+  'circle-dash':'<circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line>'
+};
+function icon(name, size){
+  size = size || 18;
+  var inner = ICON_PATHS[name] || '';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function escapeHtml(str){
+  return String(str==null?'':str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function truncate(str, len){
+  str = String(str==null?'':str);
+  return str.length > len ? str.slice(0,len-1) + '…' : str;
+}
+function initials(name){
+  return String(name).split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0].toUpperCase();}).join('');
+}
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function formatDateTime(d){
+  var h = d.getHours();
+  var ampm = h>=12 ? 'pm':'am';
+  h = h%12; if(h===0) h=12;
+  return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' '+pad(h)+':'+pad(d.getMinutes())+' '+ampm;
+}
+function formatDateShort(d){
+  return (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
+}
+function toInputDate(d){
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0,0); }
+function endOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23,59,59,999); }
+function daysInMonth(year, month){ return new Date(year, month+1, 0).getDate(); }
+function inRange(date, range){
+  return date.getTime() >= range.start.getTime() && date.getTime() <= range.end.getTime();
+}
+function presetRange(preset){
+  var now = new Date();
+  var start, end;
+  if(preset==='thisMonth'){
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0,0,0,0);
+    end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
+  } else if(preset==='last7'){
+    end = new Date(now); end.setHours(23,59,59,999);
+    start = new Date(now); start.setDate(start.getDate()-6); start.setHours(0,0,0,0);
+  } else if(preset==='last30'){
+    end = new Date(now); end.setHours(23,59,59,999);
+    start = new Date(now); start.setDate(start.getDate()-29); start.setHours(0,0,0,0);
+  } else {
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0,0,0,0);
+    end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
+  }
+  return {start:start, end:end};
+}
+function sortRecords(list){
+  return list.slice().sort(function(a,b){
+    var at = (a.modifiedAt||a.createdAt).getTime();
+    var bt = (b.modifiedAt||b.createdAt).getTime();
+    if(bt!==at) return bt-at;
+    return b.seq-a.seq;
+  });
+}
+
+/* =========================================================
+   DATA MODEL
+   ========================================================= */
+function mkFile(opts){
+  return {
+    id: nextId('file'),
+    name: opts.name,
+    fileObj: opts.fileObj || null,
+    blobUrl: opts.blobUrl || null,
+    type: opts.type || '',
+    remarks: opts.remarks || '',
+    party: 'RGB Exports',
+    uploader: opts.uploader,
+    createdAt: opts.createdAt,
+    modifiedAt: opts.modifiedAt || null,
+    seq: state.seq++
+  };
+}
+function mkNote(opts){
+  return {
+    id: nextId('note'),
+    title: opts.title || '',
+    text: opts.text,
+    creator: opts.creator,
+    createdAt: opts.createdAt,
+    modifiedAt: opts.modifiedAt || null,
+    seq: state.seq++
+  };
+}
+function seedData(){
+  var now = Date.now();
+  state.files = [
+    mkFile({ name:'Al_Logo_White_New.svg', type:'SVG', uploader:'Hrucha Malusare',
+      createdAt:new Date(2026,2,30,21,25), modifiedAt:null }),
+    mkFile({ name:'BOL_Q3_Contract.pdf', type:'Bill of Lading', uploader:'Sudhi SP',
+      createdAt:new Date(now-2*86400000), modifiedAt:new Date(now-1*3600000) }),
+    mkFile({ name:'Customs_Declaration.pdf', type:'Customs Declaration', uploader:'Sudhi SP',
+      createdAt:new Date(now-20*3600000), modifiedAt:null })
+  ];
+  state.notes = [
+    mkNote({ title:'Special handling', text:'Do not contact on WhatsApp — email only, per client request.', creator:'Sudhi SP', createdAt:new Date(now-5*3600000) }),
+    mkNote({ title:'', text:'Client prefers weekly updates via email.', creator:'Hrucha Malusare', createdAt:new Date(now-20*3600000) })
+  ];
+}
+
+/* =========================================================
+   SHELL: sidebar / tabs
+   ========================================================= */
+function toggleSidebar(){
+  document.getElementById('app-shell').classList.toggle('sidebar-collapsed');
+}
+function toggleSalesGroup(e){
+  var group = document.getElementById('sales-subgroup');
+  group.classList.toggle('open');
+  e.currentTarget.classList.toggle('group-open');
+}
+function switchActivityTab(tab){
+  state.activeSubTab = tab;
+  document.querySelectorAll('.activity-tab').forEach(function(el){
+    el.classList.toggle('active', el.dataset.tab===tab);
+  });
+  document.querySelectorAll('.panel-content').forEach(function(el){
+    el.hidden = el.id !== 'panel-'+tab;
+  });
+  if(tab==='files') renderFilesPanel();
+  if(tab==='notes') renderNotesPanel();
+}
+function rerenderActivePanel(){
+  if(state.activeSubTab==='files') renderFilesPanel();
+  if(state.activeSubTab==='notes') renderNotesPanel();
+}
+
+/* =========================================================
+   DATE FILTER
+   ========================================================= */
+function ensureCalendarState(tab){
+  if(!state.calendar[tab]){
+    var base = (state.filters[tab] && state.filters[tab].start) ? state.filters[tab].start : new Date();
+    state.calendar[tab] = { viewYear: base.getFullYear(), viewMonth: base.getMonth(), tempStart:null, tempEnd:null };
+  }
+  return state.calendar[tab];
+}
+function toggleDateFilter(tab){
+  state.openDateFilter = (state.openDateFilter===tab) ? null : tab;
+  rerenderActivePanel();
+}
+function closeDateFilter(){
+  state.openDateFilter = null;
+  rerenderActivePanel();
+}
+function applyDatePreset(tab, key){
+  if(key==='custom'){
+    var cal = ensureCalendarState(tab);
+    if(state.filters[tab].preset==='custom'){
+      cal.tempStart = state.filters[tab].start;
+      cal.tempEnd = state.filters[tab].end;
+      cal.viewYear = state.filters[tab].start.getFullYear();
+      cal.viewMonth = state.filters[tab].start.getMonth();
+    } else {
+      cal.tempStart = null; cal.tempEnd = null;
+    }
+    state.filters[tab] = { preset:'custom', start:state.filters[tab].start, end:state.filters[tab].end };
+    rerenderActivePanel();
+    return;
+  }
+  var range = presetRange(key);
+  state.filters[tab] = { preset:key, start:range.start, end:range.end };
+  state.openDateFilter = null;
+  rerenderActivePanel();
+}
+function calNavMonth(tab, delta){
+  var cal = ensureCalendarState(tab);
+  var m = cal.viewMonth + delta, y = cal.viewYear;
+  if(m<0){ m=11; y--; } else if(m>11){ m=0; y++; }
+  cal.viewMonth = m; cal.viewYear = y;
+  rerenderActivePanel();
+}
+function calDayClicked(tab, y, m, day){
+  var cal = ensureCalendarState(tab);
+  var clicked = new Date(y, m, day, 0,0,0,0);
+  if(!cal.tempStart || (cal.tempStart && cal.tempEnd)){
+    cal.tempStart = clicked; cal.tempEnd = null;
+  } else if(clicked.getTime() < cal.tempStart.getTime()){
+    cal.tempEnd = cal.tempStart; cal.tempStart = clicked;
+  } else {
+    cal.tempEnd = clicked;
+  }
+  rerenderActivePanel();
+}
+function applyCalendarRange(tab){
+  var cal = ensureCalendarState(tab);
+  if(!cal.tempStart || !cal.tempEnd) return;
+  state.filters[tab] = { preset:'custom', start:startOfDay(cal.tempStart), end:endOfDay(cal.tempEnd) };
+  state.openDateFilter = null;
+  rerenderActivePanel();
+}
+function renderDateFilter(tab){
+  var filter = state.filters[tab];
+  var open = state.openDateFilter === tab;
+  return '<div class="date-filter">'
+    + '<button class="date-filter-btn" onclick="event.stopPropagation(); toggleDateFilter(\''+tab+'\')">'
+    + icon('calendar',15) + '<span>' + formatDateShort(filter.start) + ' - ' + formatDateShort(filter.end) + '</span>' + icon('chevron-down',13)
+    + '</button>'
+    + (open ? renderDateFilterDropdown(tab) : '')
+    + '</div>';
+}
+function renderDateFilterDropdown(tab){
+  var filter = state.filters[tab];
+  var presets = [['thisMonth','This Month'],['last7','Last 7 Days'],['last30','Last 30 Days'],['custom','Custom Range']];
+  var html = '<div class="date-filter-dropdown" onclick="event.stopPropagation()">';
+  presets.forEach(function(p){
+    var key=p[0], label=p[1];
+    html += '<button class="date-preset-item '+(filter.preset===key?'active':'')+'" onclick="applyDatePreset(\''+tab+'\',\''+key+'\')">'+label+'</button>';
+  });
+  if(filter.preset==='custom'){
+    html += renderCalendarWidget(tab);
+  }
+  html += '</div>';
+  return html;
+}
+function renderCalendarWidget(tab){
+  var cal = ensureCalendarState(tab);
+  var year = cal.viewYear, month = cal.viewMonth;
+  var first = new Date(year, month, 1);
+  var startWeekday = first.getDay();
+  var totalDays = daysInMonth(year, month);
+  var tempStart = cal.tempStart, tempEnd = cal.tempEnd;
+  var label = (tempStart ? formatDateShort(tempStart) : 'Start') + ' – ' + (tempEnd ? formatDateShort(tempEnd) : 'End');
+  var html = '<div class="cal-widget">';
+  html += '<div class="cal-header">'
+    + '<button type="button" class="cal-nav-btn" onclick="event.stopPropagation(); calNavMonth(\''+tab+'\',-1)">'+icon('chevron-left',15)+'</button>'
+    + '<span class="cal-month-label">'+MONTHS[month]+' '+year+'</span>'
+    + '<button type="button" class="cal-nav-btn" onclick="event.stopPropagation(); calNavMonth(\''+tab+'\',1)">'+icon('chevron-right',15)+'</button>'
+    + '</div>';
+  html += '<div class="cal-range-label">'+label+'</div>';
+  html += '<div class="cal-grid">';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){ html += '<div class="cal-dow">'+d+'</div>'; });
+  for(var i=0;i<startWeekday;i++){ html += '<div class="cal-day cal-day-empty"></div>'; }
+  for(var day=1; day<=totalDays; day++){
+    var d = new Date(year, month, day, 0,0,0,0);
+    var cls = 'cal-day';
+    if(tempStart && !tempEnd && d.getTime()===tempStart.getTime()) cls += ' selected';
+    if(tempStart && tempEnd && d.getTime()>=tempStart.getTime() && d.getTime()<=tempEnd.getTime()) cls += ' in-range';
+    if(tempStart && d.getTime()===tempStart.getTime()) cls += ' range-start';
+    if(tempEnd && d.getTime()===tempEnd.getTime()) cls += ' range-end';
+    html += '<button type="button" class="'+cls+'" onclick="event.stopPropagation(); calDayClicked(\''+tab+'\','+year+','+month+','+day+')">'+day+'</button>';
+  }
+  html += '</div>';
+  html += '<div class="custom-range-actions">'
+    + '<button class="btn-cancel-small" onclick="closeDateFilter()">Cancel</button>'
+    + '<button class="btn-primary-small" onclick="applyCalendarRange(\''+tab+'\')" '+((!tempStart||!tempEnd)?'disabled':'')+'>Apply</button>'
+    + '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* =========================================================
+   ACTION MENU (3-dot)
+   ========================================================= */
+function toggleActionMenu(menuId){
+  state.openMenuId = (state.openMenuId===menuId) ? null : menuId;
+  rerenderActivePanel();
+}
+function closeActionMenu(){
+  state.openMenuId = null;
+  rerenderActivePanel();
+}
+function renderActionMenuButton(recordType, id){
+  var menuId = recordType+'-'+id;
+  var open = state.openMenuId === menuId;
+  return '<div class="action-menu-wrapper">'
+    + '<button class="dots-btn" onclick="event.stopPropagation(); toggleActionMenu(\''+menuId+'\')">'+icon('more-vertical',18)+'</button>'
+    + (open ? renderActionMenu(recordType, id) : '')
+    + '</div>';
+}
+function renderActionMenu(recordType, id){
+  if(recordType==='file'){
+    return '<div class="action-menu" onclick="event.stopPropagation()">'
+      + '<button class="action-menu-item" onclick="closeActionMenu(); previewFile(\''+id+'\')">'+icon('eye',19)+' Preview</button>'
+      + '<button class="action-menu-item" onclick="closeActionMenu(); editFileClicked(\''+id+'\')">'+icon('edit-2',19)+' Edit</button>'
+      + '<button class="action-menu-item" onclick="closeActionMenu(); downloadFile(\''+id+'\')">'+icon('download',19)+' Download</button>'
+      + '<button class="action-menu-item danger" onclick="closeActionMenu(); deleteFileClicked(\''+id+'\')">'+icon('trash-2',19)+' Delete</button>'
+      + '</div>';
+  }
+  return '<div class="action-menu" onclick="event.stopPropagation()">'
+    + '<button class="action-menu-item" onclick="closeActionMenu(); editNoteClicked(\''+id+'\')">'+icon('edit-2',19)+' Edit</button>'
+    + '<button class="action-menu-item" onclick="closeActionMenu(); viewNoteClicked(\''+id+'\')">'+icon('eye',19)+' View</button>'
+    + '<button class="action-menu-item" onclick="closeActionMenu(); duplicateNoteClicked(\''+id+'\')">'+icon('copy',19)+' Duplicate</button>'
+    + '<button class="action-menu-item danger" onclick="closeActionMenu(); deleteNoteClicked(\''+id+'\')">'+icon('trash-2',19)+' Delete</button>'
+    + '</div>';
+}
+
+document.addEventListener('click', function(e){
+  var changed = false;
+  if(state.openDateFilter && !e.target.closest('.date-filter')){ state.openDateFilter = null; changed = true; }
+  if(state.openMenuId && !e.target.closest('.action-menu-wrapper')){ state.openMenuId = null; changed = true; }
+  if(changed) rerenderActivePanel();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    if(state.modal){ closeModalCancel(); }
+    else if(state.drawer){ attemptCloseDrawer(); }
+    else if(state.openMenuId || state.openDateFilter){ state.openMenuId=null; state.openDateFilter=null; rerenderActivePanel(); }
+  }
+});
+
+/* =========================================================
+   FILES PANEL
+   ========================================================= */
+function renderUploadButton(){
+  var disabled = !state.permissions.add;
+  return '<button class="btn btn-outline '+(disabled?'btn-disabled':'')+'" '
+    + (disabled? 'title="'+escapeHtml(PERM_DENIED_MSG)+'"' : '')
+    + ' onclick="if(state.permissions.add){openAddFileDrawer();}">'
+    + icon('plus-circle',16) + ' Upload File</button>';
+}
+function renderEmptyState(msg){
+  return '<div class="empty-state">'+icon('circle-dash',34)+'<span>'+msg+'</span></div>';
+}
+function renderFileCard(f){
+  var displayDate = f.modifiedAt || f.createdAt;
+  return '<div class="record-card">'
+    + '<div class="card-icon-square green">'+icon('file',20)+'</div>'
+    + '<div class="card-content">'
+    + '<div class="card-top-row">'
+    + '<div class="card-top-left">'
+    + '<a href="#" class="card-name-link" title="'+escapeHtml(f.name)+'" onclick="event.preventDefault(); previewFile(\''+f.id+'\')">'+escapeHtml(f.name)+'</a>'
+    + '<span class="type-badge" title="'+escapeHtml(f.type)+'">'+escapeHtml(f.type)+'</span>'
+    + '</div>'
+    + '<div class="card-top-right"><span class="card-date">'+formatDateTime(displayDate)+'</span>'+renderActionMenuButton('file', f.id)+'</div>'
+    + '</div>'
+    + '<div class="card-second-row">'
+    + '<span class="avatar-tag">'+initials(f.uploader)+'</span>'
+    + '<span class="uploader-name">'+escapeHtml(f.uploader)+'</span>'
+    + '</div></div></div>';
+}
+function renderFilesPanel(){
+  var container = document.getElementById('panel-files');
+  var filter = state.filters.files;
+  var list = sortRecords(state.files.filter(function(f){ return inRange(f.createdAt, filter); }));
+  container.innerHTML =
+    '<div class="feed-header"><h3 class="feed-title">Files</h3>'
+    + '<div class="feed-actions">' + renderUploadButton() + renderDateFilter('files') + '</div></div>'
+    + '<div class="card-list">' + (list.length ? list.map(renderFileCard).join('') : renderEmptyState('No Files found.')) + '</div>';
+}
+
+/* ---- Add / Edit File drawer ---- */
+function openAddFileDrawer(){
+  state.drawer = { type:'addFile', pendingFiles:[] };
+  renderDrawer();
+}
+function editFileClicked(fileId){
+  if(!state.permissions.update){ showToast('error', PERM_DENIED_MSG); return; }
+  var f = state.files.filter(function(x){return x.id===fileId;})[0];
+  state.drawer = {
+    type:'editFile', fileId:fileId,
+    fileType: f.type, remarks: f.remarks, error:false,
+    original: { fileType:f.type, remarks:f.remarks }
+  };
+  renderDrawer();
+}
+function renderAddFileBody(){
+  var d = state.drawer;
+  var count = d.pendingFiles.length;
+  var capReached = count>=25;
+  var html = '<div class="field"><label>Party <span class="required">*</span></label><div class="locked-field">RGB Exports</div></div>';
+  html += '<div class="field"><label>Attachments <span class="required">*</span></label>'
+    + '<div class="dropzone '+(capReached?'disabled':'')+'" id="dropzone" ondragover="event.preventDefault(); this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="handleFileDrop(event)">'
+    + '<div class="dropzone-icon">'+icon('upload-cloud',30)+'</div>'
+    + '<div>Drag and drop files here</div>'
+    + '<button type="button" class="browse-btn" '+(capReached?'disabled':'')+' onclick="triggerFileBrowse()">'+icon('file',15)+' Browse Files</button>'
+    + '<input type="file" id="file-input" multiple style="display:none" onchange="handleFileInputChange(event)">'
+    + '</div>'
+    + '<div class="count-line">'+count+' of 25 files added</div>'
+    + '</div>';
+  if(count>0) html += renderFileRowsTable(d.pendingFiles);
+  return html;
+}
+function renderFileRowsTable(rows){
+  var html = '<div class="file-table">'
+    + '<div class="file-table-hcell">File</div>'
+    + '<div class="file-table-hcell">File Type <span class="required">*</span></div>'
+    + '<div class="file-table-hcell">Remarks</div>'
+    + '<div class="file-table-hcell"></div>';
+  rows.forEach(function(r){
+    html += '<div class="file-name-cell" title="'+escapeHtml(r.fileObj.name)+'">'+escapeHtml(truncate(r.fileObj.name,34))+'</div>';
+    html += '<div>'
+      + '<select id="type-select-'+r.id+'" class="'+(r.error?'error-field':'')+'" onchange="pendingFileTypeChanged(\''+r.id+'\', this.value)">'
+      + '<option value="">Select Type</option>'
+      + FILE_TYPE_OPTIONS.map(function(t){ return '<option value="'+t+'" '+(r.type===t?'selected':'')+'>'+t+'</option>'; }).join('')
+      + '</select>'
+      + (r.error ? '<div class="inline-error">File Type is required.</div>' : '')
+      + '</div>';
+    html += '<div><input type="text" value="'+escapeHtml(r.remarks)+'" oninput="pendingFileRemarksChanged(\''+r.id+'\', this.value)"></div>';
+    html += '<div><button class="remove-row-btn" onclick="removePendingFile(\''+r.id+'\')">'+icon('minus',13)+'</button></div>';
+  });
+  html += '</div>';
+  return html;
+}
+function renderFileFooter(){
+  return '<button class="btn btn-cancel" onclick="attemptCloseDrawer()">Cancel</button>'
+    + '<button class="btn btn-navy" onclick="saveFileDrawer()">Save</button>';
+}
+function triggerFileBrowse(){ document.getElementById('file-input').click(); }
+function handleFileInputChange(e){ addFilesToPending(Array.prototype.slice.call(e.target.files)); e.target.value=''; }
+function handleFileDrop(e){
+  e.preventDefault();
+  var dz = document.getElementById('dropzone');
+  if(dz) dz.classList.remove('drag-over');
+  addFilesToPending(Array.prototype.slice.call(e.dataTransfer.files));
+}
+function addFilesToPending(fileList){
+  var d = state.drawer;
+  if(!d || d.type!=='addFile') return;
+  if(fileList.length===0) return;
+  if(d.pendingFiles.length + fileList.length > 25){
+    showToast('error','Cannot upload more than 25 files.');
+    return;
+  }
+  fileList.forEach(function(f){
+    d.pendingFiles.push({ id:nextId('row'), fileObj:f, type:'', remarks:'', error:false });
+  });
+  renderDrawer();
+}
+function removePendingFile(rowId){
+  state.drawer.pendingFiles = state.drawer.pendingFiles.filter(function(r){ return r.id!==rowId; });
+  renderDrawer();
+}
+function pendingFileTypeChanged(rowId, value){
+  var row = state.drawer.pendingFiles.filter(function(r){return r.id===rowId;})[0];
+  row.type = value; row.error = false;
+  renderDrawer();
+}
+function pendingFileRemarksChanged(rowId, value){
+  var row = state.drawer.pendingFiles.filter(function(r){return r.id===rowId;})[0];
+  row.remarks = value;
+}
+function renderEditFileBody(){
+  var d = state.drawer;
+  var f = state.files.filter(function(x){return x.id===d.fileId;})[0];
+  var knownTypes = FILE_TYPE_OPTIONS.slice();
+  if(d.fileType && knownTypes.indexOf(d.fileType)===-1) knownTypes.push(d.fileType);
+  return '<div class="field"><label>Party <span class="required">*</span></label><div class="locked-field">RGB Exports</div></div>'
+    + '<div class="field"><label>File</label><div class="locked-field">'+escapeHtml(f.name)+'</div></div>'
+    + '<div class="field"><label>File Type <span class="required">*</span></label>'
+    + '<select class="'+(d.error?'error-field':'')+'" onchange="editFileFieldChanged(\'fileType\', this.value)">'
+    + '<option value="" '+(d.fileType===''?'selected':'')+'>Select File Type</option>'
+    + knownTypes.map(function(t){ return '<option value="'+t+'" '+(d.fileType===t?'selected':'')+'>'+t+'</option>'; }).join('')
+    + '</select>'
+    + (d.error ? '<div class="inline-error">File Type is required.</div>' : '')
+    + '</div>'
+    + '<div class="field"><label>Remarks</label><input type="text" value="'+escapeHtml(d.remarks)+'" oninput="editFileFieldChanged(\'remarks\', this.value)"></div>';
+}
+function editFileFieldChanged(key, value){
+  state.drawer[key] = value;
+  if(key==='fileType'){ state.drawer.error = false; renderDrawer(); }
+}
+function saveFileDrawer(){
+  var d = state.drawer;
+  if(d.type==='addFile'){
+    if(d.pendingFiles.length===0){ showToast('error','Please upload at least one file.'); return; }
+    var firstInvalidId = null;
+    d.pendingFiles.forEach(function(r){
+      if(!r.type){ r.error=true; if(!firstInvalidId) firstInvalidId=r.id; } else { r.error=false; }
+    });
+    if(firstInvalidId){
+      renderDrawer();
+      setTimeout(function(){
+        var el = document.getElementById('type-select-'+firstInvalidId);
+        if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      }, 60);
+      return;
+    }
+    if(state.simulateFailure){ showToast('error','Unable to save File. Please try again.'); return; }
+    var now = new Date();
+    d.pendingFiles.forEach(function(r){
+      var blobUrl = URL.createObjectURL(r.fileObj);
+      state.files.push(mkFile({
+        name:r.fileObj.name, fileObj:r.fileObj, blobUrl:blobUrl, type:r.type, remarks:r.remarks,
+        uploader:CURRENT_USER, createdAt:now, modifiedAt:null
+      }));
+    });
+    state.drawer = null;
+    renderDrawer();
+    showToast('success','File(s) uploaded successfully.');
+    renderFilesPanel();
+  } else if(d.type==='editFile'){
+    if(!d.fileType){ d.error = true; renderDrawer(); return; }
+    if(state.simulateFailure){ showToast('error','Unable to save File. Please try again.'); return; }
+    var f = state.files.filter(function(x){return x.id===d.fileId;})[0];
+    f.type = d.fileType; f.remarks = d.remarks; f.modifiedAt = new Date();
+    state.drawer = null;
+    renderDrawer();
+    showToast('success','File updated successfully.');
+    renderFilesPanel();
+  }
+}
+function deleteFileClicked(id){
+  if(!state.permissions.delete){ showToast('error', PERM_DENIED_MSG); return; }
+  showConfirm({
+    title:'Delete File', message:'Are you sure you want to delete this file?',
+    confirmText:'Yes', cancelText:'No', danger:true,
+    onConfirm:function(){
+      if(state.simulateFailure){ showToast('error','Unable to delete File. Please try again.'); return; }
+      state.files = state.files.filter(function(f){return f.id!==id;});
+      showToast('success','File deleted successfully.');
+      renderFilesPanel();
+    }
+  });
+}
+function previewFile(id){
+  var f = state.files.filter(function(x){return x.id===id;})[0];
+  if(f.blobUrl){
+    window.open(f.blobUrl, '_blank');
+  } else {
+    var html = '<!DOCTYPE html><html><head><title>'+escapeHtml(f.name)+'</title></head><body style="font-family:Arial, sans-serif; padding:48px; color:#1F2020;"><h2>'+escapeHtml(f.name)+'</h2><p>This is a prototype seed file. No real file content is available to preview.</p></body></html>';
+    var blob = new Blob([html], {type:'text/html'});
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
+}
+function downloadFile(id){
+  var f = state.files.filter(function(x){return x.id===id;})[0];
+  if(f.blobUrl){
+    var a = document.createElement('a');
+    a.href = f.blobUrl; a.download = f.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('success','File downloaded successfully.');
+  } else {
+    showToast('info','This is a prototype file. No real file content is available to download.');
+  }
+}
+
+/* =========================================================
+   NOTES PANEL
+   ========================================================= */
+function renderAddNoteButton(){
+  var disabled = !state.permissions.add;
+  return '<button class="btn btn-outline '+(disabled?'btn-disabled':'')+'" '
+    + (disabled? 'title="'+escapeHtml(PERM_DENIED_MSG)+'"' : '')
+    + ' onclick="if(state.permissions.add){openAddNoteDrawer();}">'
+    + icon('plus-circle',16) + ' Add Note</button>';
+}
+function renderNoteCard(n){
+  var displayDate = n.modifiedAt || n.createdAt;
+  var headline = (n.title && n.title.trim()) ? n.title : n.text;
+  return '<div class="record-card" onclick="noteCardClicked(event,\''+n.id+'\')">'
+    + '<div class="card-icon-square amber">'+icon('file-text',20)+'</div>'
+    + '<div class="card-content">'
+    + '<div class="card-top-row">'
+    + '<span class="card-name-link static" title="'+escapeHtml(headline)+'">'+escapeHtml(truncate(headline,60))+'</span>'
+    + '<div class="card-top-right"><span class="card-date">'+formatDateTime(displayDate)+'</span>'+renderActionMenuButton('note', n.id)+'</div>'
+    + '</div>'
+    + '<div class="card-second-row">'
+    + '<span class="avatar-tag">'+initials(n.creator)+'</span>'
+    + '<span class="uploader-name">'+escapeHtml(n.creator)+'</span>'
+    + '</div></div></div>';
+}
+function noteCardClicked(e, id){
+  if(e.target.closest('.action-menu-wrapper')) return;
+  viewNoteClicked(id);
+}
+function renderNotesPanel(){
+  var container = document.getElementById('panel-notes');
+  var filter = state.filters.notes;
+  var list = sortRecords(state.notes.filter(function(n){ return inRange(n.createdAt, filter); }));
+  container.innerHTML =
+    '<div class="feed-header"><h3 class="feed-title">Notes</h3>'
+    + '<div class="feed-actions">' + renderAddNoteButton() + renderDateFilter('notes') + '</div></div>'
+    + '<div class="card-list">' + (list.length ? list.map(renderNoteCard).join('') : renderEmptyState('No Notes found.')) + '</div>';
+}
+
+/* ---- Add / Edit / View Note drawer ---- */
+function openAddNoteDrawer(prefill){
+  state.drawer = { type:'addNote', title: prefill?prefill.title:'', text: prefill?prefill.text:'', error:false };
+  renderDrawer();
+}
+function editNoteClicked(id){
+  if(!state.permissions.update){ showToast('error', PERM_DENIED_MSG); return; }
+  openEditNoteDrawerFor(id);
+}
+function openEditNoteDrawerFor(id){
+  var n = state.notes.filter(function(x){return x.id===id;})[0];
+  state.drawer = { type:'editNote', noteId:id, title:n.title, text:n.text, error:false, original:{title:n.title, text:n.text} };
+  renderDrawer();
+}
+function viewNoteClicked(id){
+  state.drawer = { type:'viewNote', noteId:id };
+  renderDrawer();
+}
+function duplicateNoteClicked(id){
+  if(!state.permissions.add){ showToast('error', PERM_DENIED_MSG); return; }
+  var n = state.notes.filter(function(x){return x.id===id;})[0];
+  openAddNoteDrawer({title:n.title, text:n.text});
+}
+function renderNoteFormBody(){
+  var d = state.drawer;
+  return '<div class="field"><label>Title</label><input type="text" value="'+escapeHtml(d.title)+'" oninput="noteFieldChanged(\'title\', this.value)"></div>'
+    + '<div class="field"><label>Notes <span class="required">*</span></label>'
+    + '<textarea class="'+(d.error?'error-field':'')+'" rows="10" placeholder="Write your note here" oninput="noteFieldChanged(\'text\', this.value)">'+escapeHtml(d.text)+'</textarea>'
+    + (d.error ? '<div class="inline-error">Note is required.</div>' : '')
+    + '</div>';
+}
+function noteFieldChanged(key, value){
+  state.drawer[key] = value;
+  if(key==='text' && value.trim()){
+    state.drawer.error = false;
+    var ta = document.querySelector('.drawer-body textarea');
+    var errDiv = document.querySelector('.drawer-body .inline-error');
+    if(ta) ta.classList.remove('error-field');
+    if(errDiv) errDiv.remove();
+  }
+}
+function renderNoteFormFooter(){
+  return '<button class="btn btn-cancel" onclick="attemptCloseDrawer()">Cancel</button>'
+    + '<button class="btn btn-navy" onclick="saveNoteDrawer()">Save</button>';
+}
+function saveNoteDrawer(){
+  var d = state.drawer;
+  if(!d.text || !d.text.trim()){ d.error = true; renderDrawer(); return; }
+  if(state.simulateFailure){ showToast('error','Unable to save Note. Please try again.'); return; }
+  var now = new Date();
+  if(d.type==='addNote'){
+    state.notes.push(mkNote({title:d.title, text:d.text, creator:CURRENT_USER, createdAt:now}));
+    state.drawer = null; renderDrawer();
+    showToast('success','Note saved successfully.');
+  } else if(d.type==='editNote'){
+    var n = state.notes.filter(function(x){return x.id===d.noteId;})[0];
+    n.title = d.title; n.text = d.text; n.modifiedAt = now;
+    state.drawer = null; renderDrawer();
+    showToast('success','Note updated successfully.');
+  }
+  renderNotesPanel();
+}
+function renderViewNoteBody(){
+  var n = state.notes.filter(function(x){return x.id===state.drawer.noteId;})[0];
+  return '<div class="field"><label>Title</label><div class="readonly-field">'+(n.title?escapeHtml(n.title):'—')+'</div></div>'
+    + '<div class="field"><label>Notes</label><div class="readonly-field multiline">'+escapeHtml(n.text)+'</div></div>';
+}
+function renderViewNoteFooter(){
+  var disabled = !state.permissions.update;
+  return '<button class="btn btn-cancel" onclick="attemptCloseDrawer()">Cancel</button>'
+    + '<button class="btn btn-navy '+(disabled?'btn-disabled':'')+'" '
+    + (disabled? 'title="'+escapeHtml(PERM_DENIED_MSG)+'"' : '')
+    + ' onclick="if(!'+disabled+'){switchToEditFromView();}">Edit</button>';
+}
+function switchToEditFromView(){ openEditNoteDrawerFor(state.drawer.noteId); }
+function deleteNoteClicked(id){
+  if(!state.permissions.delete){ showToast('error', PERM_DENIED_MSG); return; }
+  showConfirm({
+    title:'Delete Note', message:'Are you sure you want to delete this note?',
+    confirmText:'Yes', cancelText:'No', danger:true,
+    onConfirm:function(){
+      if(state.simulateFailure){ showToast('error','Unable to delete Note. Please try again.'); return; }
+      state.notes = state.notes.filter(function(n){return n.id!==id;});
+      showToast('success','Note deleted successfully.');
+      renderNotesPanel();
+    }
+  });
+}
+
+/* =========================================================
+   DRAWER SHELL
+   ========================================================= */
+function renderDrawer(){
+  var backdrop = document.getElementById('drawer-backdrop');
+  var drawer = document.getElementById('drawer');
+  if(!state.drawer){
+    backdrop.classList.remove('open');
+    drawer.classList.remove('open');
+    updateProtoTestButtonsState();
+    return;
+  }
+  backdrop.classList.add('open');
+  drawer.classList.add('open');
+  var titleEl = document.getElementById('drawer-title');
+  var bodyEl = document.getElementById('drawer-body');
+  var footerEl = document.getElementById('drawer-footer');
+  switch(state.drawer.type){
+    case 'addFile': titleEl.textContent='Add New File'; bodyEl.innerHTML=renderAddFileBody(); footerEl.innerHTML=renderFileFooter(); break;
+    case 'editFile': titleEl.textContent='Edit File'; bodyEl.innerHTML=renderEditFileBody(); footerEl.innerHTML=renderFileFooter(); break;
+    case 'addNote': titleEl.textContent='Add New Note'; bodyEl.innerHTML=renderNoteFormBody(); footerEl.innerHTML=renderNoteFormFooter(); break;
+    case 'editNote': titleEl.textContent='Edit Note'; bodyEl.innerHTML=renderNoteFormBody(); footerEl.innerHTML=renderNoteFormFooter(); break;
+    case 'viewNote': titleEl.textContent='View Note'; bodyEl.innerHTML=renderViewNoteBody(); footerEl.innerHTML=renderViewNoteFooter(); break;
+  }
+  updateProtoTestButtonsState();
+}
+function isDrawerDirty(){
+  var d = state.drawer;
+  if(!d) return false;
+  if(d.type==='addFile') return d.pendingFiles.length>0;
+  if(d.type==='editFile') return d.fileType!==d.original.fileType || d.remarks!==d.original.remarks;
+  if(d.type==='addNote') return !!(d.title && d.title.trim()) || !!(d.text && d.text.trim());
+  if(d.type==='editNote') return d.title!==d.original.title || d.text!==d.original.text;
+  return false;
+}
+function attemptCloseDrawer(){
+  if(isDrawerDirty()){
+    showConfirm({
+      title:'Unsaved changes',
+      message:'You have unsaved changes. Do you want to discard them?',
+      confirmText:'Yes, discard', cancelText:'No, go back', danger:true,
+      onConfirm:function(){ state.drawer=null; renderDrawer(); }
+    });
+  } else {
+    state.drawer = null;
+    renderDrawer();
+  }
+}
+
+/* =========================================================
+   CONFIRM MODAL
+   ========================================================= */
+function showConfirm(opts){ state.modal = opts; renderModal(); }
+function renderModal(){
+  var root = document.getElementById('modal-root');
+  if(!state.modal){ root.innerHTML=''; return; }
+  var m = state.modal;
+  root.innerHTML =
+    '<div class="modal-backdrop" onclick="closeModalCancel()">'
+    + '<div class="modal" onclick="event.stopPropagation()">'
+    + '<div class="modal-header">'+escapeHtml(m.title)+'</div>'
+    + '<div class="modal-body">'+escapeHtml(m.message)+'</div>'
+    + '<div class="modal-footer">'
+    + '<button class="btn btn-cancel" onclick="closeModalCancel()">'+escapeHtml(m.cancelText||'Cancel')+'</button>'
+    + '<button class="btn '+(m.danger?'btn-danger':'btn-navy')+'" onclick="closeModalConfirm()">'+escapeHtml(m.confirmText||'Yes')+'</button>'
+    + '</div></div></div>';
+}
+function closeModalCancel(){ state.modal = null; renderModal(); }
+function closeModalConfirm(){
+  var cb = state.modal && state.modal.onConfirm;
+  state.modal = null; renderModal();
+  if(cb) cb();
+}
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+function showToast(type, message){
+  var root = document.getElementById('toast-root');
+  var el = document.createElement('div');
+  el.className = 'toast toast-'+type;
+  var iconName = type==='success' ? 'check' : type==='error' ? 'x' : 'info';
+  el.innerHTML = '<span class="toast-icon">'+icon(iconName,13)+'</span><span class="toast-msg">'+escapeHtml(message)+'</span>';
+  root.prepend(el);
+  setTimeout(function(){
+    el.classList.add('toast-hide');
+    setTimeout(function(){ el.remove(); }, 300);
+  }, 3500);
+}
+
+/* =========================================================
+   PROTOTYPE CONTROLS
+   ========================================================= */
+function toggleProtoPanel(){
+  var body = document.getElementById('proto-body');
+  body.classList.toggle('collapsed');
+}
+function updateProtoTestButtonsState(){
+  var isAddFileOpen = state.drawer && state.drawer.type==='addFile';
+  var b5 = document.getElementById('btn-add5');
+  var b30 = document.getElementById('btn-add30');
+  if(b5) b5.disabled = !isAddFileOpen;
+  if(b30) b30.disabled = !isAddFileOpen;
+}
+function protoAddTestFiles(n){
+  if(!state.drawer || state.drawer.type!=='addFile') return;
+  var files = [];
+  var stamp = Date.now();
+  for(var i=0;i<n;i++){
+    files.push(new File(['Prototype test file content'], 'test-file-'+stamp+'-'+(i+1)+'.txt', {type:'text/plain'}));
+  }
+  addFilesToPending(files);
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function init(){
+  seedData();
+  state.filters.files = (function(){ var r=presetRange('thisMonth'); return {preset:'thisMonth', start:r.start, end:r.end}; })();
+  state.filters.notes = (function(){ var r=presetRange('thisMonth'); return {preset:'thisMonth', start:r.start, end:r.end}; })();
+  switchActivityTab('activities');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
